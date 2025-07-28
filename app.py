@@ -5,7 +5,6 @@ API Flask simples.
 from flask import Flask, make_response, jsonify, request
 from db import Carros
 
-
 app = Flask(__name__)
 
 @app.route('/carros', methods=['GET'])
