@@ -3,7 +3,7 @@ API Flask simples.
 """
 
 import mysql.connector
-from flask import Flask, make_response, jsonify, request
+from flask import Flask, jsonify, make_response, request
 
 mydb = mysql.connector.connect(
     host="localhost", user="RootUser", password="MainPassword", database="CarrosDB"
@@ -20,14 +20,15 @@ def get_carros():
         meus_carros = cursor.fetchall()
         carros = list()
         for carro in meus_carros:
-            carros.append(
-                {
-                    "id": carro["id"],
-                    "marca": carro["marca"],
-                    "modelo": carro["modelo"],
-                    "ano": carro["ano"],
-                }
-            )
+            if isinstance(carro, dict):
+                carros.append(
+                    {
+                        "id": carro.get("id"),
+                        "marca": carro.get("marca"),
+                        "modelo": carro.get("modelo"),
+                        "ano": carro.get("ano"),
+                    }
+                )
         return make_response(jsonify(message="Lista de carros", carros=carros))
     except mysql.connector.Error as e:
         print("Erro no endpoint GET /carros:", e)
@@ -41,9 +42,11 @@ def create_carro():
     """
     try:
         carro = request.json
+        if not isinstance(carro, dict):
+            return make_response(jsonify(message="JSON inválido"), 400)
         cursor = mydb.cursor()
         sql = "INSERT INTO Carros (marca, modelo, ano) VALUES (%s, %s, %s)"
-        valores = (carro["marca"], carro["modelo"], carro["ano"])
+        valores = (carro.get("marca"), carro.get("modelo"), carro.get("ano"))
         cursor.execute(sql, valores)
         mydb.commit()
         carro["id"] = cursor.lastrowid
@@ -61,9 +64,11 @@ def update_carro(carro_id):
     """
     try:
         dados = request.json
+        if not isinstance(dados, dict):
+            return make_response(jsonify(message="JSON inválido"), 400)
         cursor = mydb.cursor()
         sql = "UPDATE Carros SET marca=%s, modelo=%s, ano=%s WHERE id=%s"
-        valores = (dados["marca"], dados["modelo"], dados["ano"], carro_id)
+        valores = (dados.get("marca"), dados.get("modelo"), dados.get("ano"), carro_id)
         cursor.execute(sql, valores)
         mydb.commit()
         if cursor.rowcount == 0:
