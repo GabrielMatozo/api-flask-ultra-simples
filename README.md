@@ -1,77 +1,76 @@
-
-
 # API Flask Ultra Simples
 
-Este projeto foi desenvolvido para relembrar conceitos básicos do Flask. Ele implementa uma API RESTful simples utilizando Flask e MySQL para cadastro e consulta de carros.
+API RESTful em Flask para cadastro e consulta de carros, com MySQL, SQLAlchemy, validação, testes, Docker, Swagger, paginação e filtros.
 
 ## Funcionalidades
-- Listar todos os carros cadastrados (`GET /carros`)
-- Cadastrar um novo carro (`POST /carros`)
-- Atualizar um carro existente (`PUT /carros/<id>`)
-- Remover um carro existente (`DELETE /carros/<id>`)
 
-## Estrutura do Projeto
+- CRUD completo de carros (`GET/POST/PUT/DELETE /carros`)
+- Paginação (`?page=1&per_page=10`)
+- Filtros por marca, modelo e ano (`?marca=Fiat&ano=2020`)
+- Validação de payload (Marshmallow)
+- Swagger UI em `/apidocs/`
+- Health check (`GET /health`)
+- CORS habilitado
+- Rate limiting (100 req/hora)
+- Docker Compose (Flask + MySQL)
+- Testes com pytest (16 testes)
+
+## Estrutura
+
 ```
-app.py                 # Código principal da API Flask
-Dockerfile             # (Opcional) Dockerização do projeto
-docker-compose.yml     # (Opcional) Orquestração dos containers (API + MySQL)
-db/CreateDataBase.sql  # Script SQL para criar o banco de dados e tabela
+├── app/
+│   ├── __init__.py          # App factory, CORS, Swagger, rate limit
+│   ├── config.py            # Config via .env (DATABASE_URL)
+│   ├── models.py            # SQLAlchemy (Carro)
+│   ├── schemas.py           # Marshmallow schemas
+│   ├── errors.py            # Error handlers globais
+│   └── routes/
+│       └── carros.py        # Blueprint CRUD + paginação + filtros
+├── tests/
+│   ├── conftest.py          # Fixtures (SQLite in-memory)
+│   └── test_carros.py       # 16 testes
+├── db/
+│   └── CreateDataBase.sql   # Script de inicialização do MySQL
+├── .env.example             # Template de variáveis de ambiente
+├── Dockerfile               # Imagem Python 3.12-slim
+├── docker-compose.yml       # API + MySQL com healthcheck
+└── requirements.txt
 ```
 
-## Instalação
-1. Clone este repositório:
-   ```sh
-   git clone https://github.com/GabrielMatozo/api-flask-ultra-simples
-   cd api-flask-ultra-simples
-   ```
-2. Instale as dependências do Python:
-   ```sh
-   pip install -r requirements.txt
-   ```
-3. Configure o banco de dados MySQL usando o script em `db/CreateDataBase.sql`.
-4. Ajuste as credenciais de acesso ao banco em `app.py` se necessário.
+## Docker (recomendado)
 
-## Utilizando Docker Compose
-Se preferir, você pode subir o ambiente completo (API + banco de dados) usando Docker Compose. Certifique-se de ter o Docker e o Docker Compose instalados.
-
-Para subir os containers:
 ```sh
-docker-compose up
-```
-Isso irá criar e iniciar os serviços definidos no arquivo `docker-compose.yml`.
-
-Para parar os containers:
-```sh
-docker-compose down
+docker compose up --build
 ```
 
-## Como executar
+A API estará em `http://localhost:5000` e o Swagger em `http://localhost:5000/apidocs/`.
+
+## Desenvolvimento local
+
 ```sh
+cp .env.example .env
+pip install -r requirements.txt
 python app.py
 ```
-A API estará disponível em: http://localhost:5000
 
-## Exemplos de uso
+## Testes
 
-### Listar carros
 ```sh
-curl http://localhost:5000/carros
+pytest -v
 ```
 
-### Cadastrar carro
-```sh
-curl -X POST http://localhost:5000/carros -H "Content-Type: application/json" -d '{"marca": "Fiat", "modelo": "Uno", "ano": 2010}'
-```
+Usa SQLite em memória — não precisa de MySQL rodando.
 
-### Atualizar carro
-```sh
-curl -X PUT http://localhost:5000/carros/1 -H "Content-Type: application/json" -d '{"marca": "Fiat", "modelo": "Palio", "ano": 2012}'
-```
+## Endpoints
 
-### Remover carro
-```sh
-curl -X DELETE http://localhost:5000/carros/1
-```
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/carros` | Listar carros (paginado, filtrável) |
+| POST | `/carros` | Criar carro |
+| PUT | `/carros/{id}` | Atualizar carro |
+| DELETE | `/carros/{id}` | Remover carro |
+| GET | `/health` | Health check |
+| GET | `/apidocs/` | Swagger UI |
 
 ---
 
