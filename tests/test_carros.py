@@ -123,6 +123,12 @@ def test_get_carros_filtro_modelo(client):
     assert len(data["carros"]) == 1
 
 
+def test_health_check(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.get_json()["status"] == "ok"
+
+
 def test_get_carros_filtro_combinado(client):
     client.post("/carros", json={"marca": "Fiat", "modelo": "Uno", "ano": 2010})
     client.post("/carros", json={"marca": "Fiat", "modelo": "Palio", "ano": 2012})
