@@ -1,11 +1,7 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:5.7
     container_name: carros-db
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: RootPassword
       MYSQL_DATABASE: CarrosDB
@@ -14,6 +10,23 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: mysqladmin ping -h localhost -u RootUser -pMainPassword
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    container_name: carros-api
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_URL: mysql+mysqlconnector://RootUser:MainPassword@db:3306/CarrosDB
+      FLASK_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:

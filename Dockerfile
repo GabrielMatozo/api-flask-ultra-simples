@@ -1,5 +1,12 @@
-# Derivando da imagem oficial do MySQL 5.7
-FROM mysql:5.7
+FROM python:3.12-slim
 
-# Adicionando os scripts SQL para serem executados na inicialização do banco
-COPY ./db/ /docker-entrypoint-initdb.d/
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]
