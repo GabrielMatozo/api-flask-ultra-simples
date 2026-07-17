@@ -70,3 +70,66 @@ def test_delete_carro(client):
 def test_delete_carro_not_found(client):
     resp = client.delete("/carros/999")
     assert resp.status_code == 404
+
+
+def test_get_carros_pagination(client):
+    for i in range(15):
+        client.post(
+            "/carros", json={"marca": "Marca", "modelo": f"Modelo {i}", "ano": 2000 + i}
+        )
+
+    page1 = client.get("/carros?page=1&per_page=10")
+    assert page1.status_code == 200
+    data1 = page1.get_json()
+    assert len(data1["carros"]) == 10
+    assert data1["pagina"]["page"] == 1
+    assert data1["pagina"]["per_page"] == 10
+    assert data1["pagina"]["total"] == 15
+    assert data1["pagina"]["pages"] == 2
+
+    page2 = client.get("/carros?page=2&per_page=10")
+    assert page2.status_code == 200
+    assert len(page2.get_json()["carros"]) == 5
+
+
+def test_get_carros_filtro_marca(client):
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Uno", "ano": 2010})
+    client.post("/carros", json={"marca": "Ford", "modelo": "Focus", "ano": 2018})
+
+    resp = client.get("/carros?marca=Fiat")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data["carros"]) == 1
+    assert data["carros"][0]["marca"] == "Fiat"
+
+
+def test_get_carros_filtro_ano(client):
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Uno", "ano": 2010})
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Palio", "ano": 2012})
+
+    resp = client.get("/carros?ano=2010")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data["carros"]) == 1
+
+
+def test_get_carros_filtro_modelo(client):
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Uno", "ano": 2010})
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Palio", "ano": 2012})
+
+    resp = client.get("/carros?modelo=Uno")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data["carros"]) == 1
+
+
+def test_get_carros_filtro_combinado(client):
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Uno", "ano": 2010})
+    client.post("/carros", json={"marca": "Fiat", "modelo": "Palio", "ano": 2012})
+    client.post("/carros", json={"marca": "Ford", "modelo": "Focus", "ano": 2010})
+
+    resp = client.get("/carros?marca=Fiat&ano=2010")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data["carros"]) == 1
+    assert data["carros"][0]["modelo"] == "Uno"

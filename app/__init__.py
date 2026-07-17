@@ -1,5 +1,6 @@
 import time
 from sqlalchemy import text
+from flasgger import Swagger
 from flask import Flask
 from app.config import Config
 from app.models import db
@@ -13,6 +14,7 @@ def create_app(config_override=None):
     if config_override:
         app.config.update(config_override)
 
+    Swagger(app)
     db.init_app(app)
     app.register_blueprint(carros_bp)
     register_error_handlers(app)
